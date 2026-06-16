@@ -29,7 +29,7 @@ def OverwriteCSV():
     for row in data:
         if row[0] == idvar.get():
             row[1] = employeeName_Entry.get()
-            row[2] = employeeSal_label.get()
+            row[2] = employeeSal_entry.get()
 
     file_csv = open('Tkinter/39.  Emplyees.csv','w')
     writer = csv.writer(file_csv)
@@ -68,8 +68,8 @@ employeeName_Entry.grid(row=2,column=4)
 employeeSal_label = Label(win,text='Salary')
 employeeSal_label.grid(row=3,column=0)
 SalaryVar=StringVar(value=None)
-employeeSal_label = Entry(win,width=20,textvariable=SalaryVar)
-employeeSal_label.grid(row=3,column=1)
+employeeSal_entry = Entry(win,width=20,textvariable=SalaryVar)
+employeeSal_entry.grid(row=3,column=1)
 
 btn = Button(win,text='Save',command=OverwriteCSV)
 btn.grid(row=4,column=1)
