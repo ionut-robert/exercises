@@ -2,8 +2,6 @@
 from tkinter import *
 import csv 
 
-headings = []
-
 def opencsv(e):
     global ids,name,salary,data
 
@@ -20,7 +18,6 @@ def opencsv(e):
     name = [row[1] for row in data]
     salary = [row[2] for row in data]
 
-    return ids,name,salary,data
 
 def InfoUpload(e):
     idvar.set(next(row[0] for row in data if row[0]==e))
