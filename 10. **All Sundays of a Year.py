@@ -1,7 +1,6 @@
-#10. All Sundays of a Year.py
 import datetime as dt
 
-Year = int(input('Year: '))#2026
+Year = int(input('Year: '))
 
 first_day = dt.datetime.strptime(f'{Year}-01-01','%Y-%m-%d').date()
 
@@ -16,8 +15,6 @@ All_Sundays = [first_Sunday]
 print(All_Sundays)
 while All_Sundays[-1].year < Year+1:
     All_Sundays.append(All_Sundays[-1]+dt.timedelta(7))
-
-All_Sundays.pop()
 
 for i in All_Sundays:
     print(i,i.weekday())
