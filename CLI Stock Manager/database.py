@@ -21,5 +21,6 @@ IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'Orders') BEGIN CREATE TABL
                
 IF (SELECT COUNT(TransactionType_Name) FROM TransactionsType WHERE TransactionType_Name IN ('IN','OUT','Order')) = 0 BEGIN INSERT INTO TransactionsType(TransactionType_Name) VALUES ('Orders'),('IN'),('OUT') END''')
 
-cursor.commit()
+conn.commit()
+cursor.close()
 cnxn.close()
