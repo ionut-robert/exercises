@@ -33,6 +33,7 @@ if create == True:
     CREATE TABLE Orders (
         Order_ID INT IDENTITY(1,1) PRIMARY KEY,
         StockTransaction_ID INT,
+        Product_ID INT,
         Qtty FLOAT,
         Customer_Name VARCHAR(50),
         TransactionType_ID INT DEFAULT(3)
