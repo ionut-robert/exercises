@@ -1,8 +1,9 @@
-from functions import add_product,del_product,Products,stock_in,stock_out,orders
+from functions import add_product,del_product,Products,stock_in,stock_out,orders,catalog_products
+
 if __name__ == '__main__':
 
     while True:
-        menu = ['Menu','1.Add product','2.Delete product','3.Show Products','4.Search Product','5.Stock In','6.Stock Out','7.Orders','8.Stock Alerts','9.Invetory','10.Exit']
+        menu = ['Menu','1.Add product','2.Delete product','3.Show Products','4.Search Product','5.Stock In','6.Stock Out','7.Orders','8.Stock Alerts','9.Inventory','10.Exit']
 
         for row in menu:
             print(row)
@@ -18,9 +19,7 @@ if __name__ == '__main__':
             del_product(product_name)
 
         elif Choice == 3:
-            print(f"{'Product Name':<21} {'Quantity':<8}")
-            for row in Products():
-                print(f'{row[0]:<21} {row[1]:<7}')
+            catalog_products()
 
         elif Choice == 4:
             product_name = input('Product Name:')
@@ -52,9 +51,7 @@ if __name__ == '__main__':
                     print(f'{row[0]:<21} {row[1]:<7}')
         
         elif Choice == 9:
-            print(f"{'Product Name':<21} {'Quantity':<8}")
-            for row in Products():
-                print(f'{row[0]:<21} {row[1]:<7}')
+            catalog_products()
 
         elif Choice == 10:
             break
