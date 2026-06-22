@@ -5,22 +5,68 @@ def get_connection():
     conn = pyodbc.connect(DB_DRIVER, host=SERVER, database=DB_DATABASE, user=DB_USER, password=DB_PASSWORD, TrustServerCertificate='yes')
     return conn
 
+create =  False
+if create == True:
+    cnxn = get_connection()
+    cursor = cnxn.cursor()
 
-cnxn = get_connection()
-cursor = cnxn.cursor()
+    cursor.execute('''
+    IF NOT EXISTS (SELECT * FROM sys.tables)
+    BEGIN
+    CREATE TABLE Products (
+        Product_ID INT IDENTITY(1,1) PRIMARY KEY,
+        Product_Name VARCHAR(50) NOT NULL
+    )
 
-cursor.execute('''IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'Products') BEGIN CREATE TABLE Products(Product_Id INT IDENTITY(1,1) PRIMARY KEY, Product_Name VARCHAR(255)) END
+    CREATE TABLE Inventory(
+        Product_ID INT,
+        Qtty FLOAT DEFAULT(0)
 
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'Invetory') BEGIN CREATE TABLE Invetory(Product_Id INT, Qtty FLOAT, FOREIGN KEY (Product_Id) REFERENCES Products(Product_Id)) END
+        FOREIGN KEY (Product_ID)
+        REFERENCES Products(Product_ID)
+    )
+    CREATE TABLE TransactionType(
+        TransactionType_ID INT IDENTITY(1,1) PRIMARY KEY,
+        TransactionType_Name VARCHAR(20)
+    )
 
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'TransactionsType') BEGIN CREATE TABLE TransactionsType(TransactionType_Id INT IDENTITY(1,1) PRIMARY KEY, TransactionType_Name VARCHAR(255)) END
+    CREATE TABLE Orders (
+        Order_ID INT IDENTITY(1,1) PRIMARY KEY,
+        Product_ID INT,
+        Qtty FLOAT,
+        Customer_Name VARCHAR(50),
+        TransactionType_ID INT DEFAULT(3)
 
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'StockTransactions') BEGIN CREATE TABLE StockTransactions(Transaction_Id INT IDENTITY(1,1) PRIMARY KEY,Product_Id INT, Qtty FLOAT, Transaction_Type INT, FOREIGN KEY (Product_Id) REFERENCES Products(Product_Id),FOREIGN KEY (Transaction_Type) REFERENCES TransactionsType(TransactionType_Id)) END
+        FOREIGN KEY (Product_ID)
+        REFERENCES Products(Product_ID),
+        FOREIGN KEY (TransactionType_ID)
+        REFERENCES TransactionType(TransactionType_ID)
+    )
 
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'Orders') BEGIN CREATE TABLE Orders(Order_Id INT IDENTITY(1,1) PRIMARY KEY, TransactionType_Id INT, Qtty FLOAT, Product_Id INT,Customer_Name varchar(255), FOREIGN KEY(TransactionType_Id) REFERENCES TransactionsType(TransactionType_Id),FOREIGN KEY(Product_Id) REFERENCES Products(Product_Id)) END
-               
-IF (SELECT COUNT(TransactionType_Name) FROM TransactionsType WHERE TransactionType_Name IN ('IN','OUT','Order')) = 0 BEGIN INSERT INTO TransactionsType(TransactionType_Name) VALUES ('Orders'),('IN'),('OUT') END''')
+    CREATE TABLE StockTransactions(
+        StockTransaction_ID INT IDENTITY(1,1) PRIMARY KEY,
+        Product_ID INT,
+        Qtty FLOAT,
+        TransactionType_ID INT DEFAULT(2)
 
-conn.commit()
-cursor.close()
-cnxn.close()
+        FOREIGN KEY (Product_ID)
+        REFERENCES Products(Product_ID),
+        FOREIGN KEY (TransactionType_ID)
+        REFERENCES TransactionType(TransactionType_ID)
+    )
+    END ''')
+
+    cursor.execute('''CREATE TRIGGER trg_invetory_insert
+        ON Products
+        AFTER INSERT
+    AS 
+    BEGIN
+        INSERT INTO Invetory 
+        SELECT TOP 1 Product_ID
+        FROM Products
+        ORDER BY Product_Id DESC
+    END''')
+    
+    cnxn.commit()
+    cursor.close()
+    cnxn.close()
