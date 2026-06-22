@@ -32,7 +32,7 @@ if create == True:
 
     CREATE TABLE Orders (
         Order_ID INT IDENTITY(1,1) PRIMARY KEY,
-        Product_ID INT,
+        StockTransaction_ID INT,
         Qtty FLOAT,
         Customer_Name VARCHAR(50),
         TransactionType_ID INT DEFAULT(3)
@@ -47,7 +47,7 @@ if create == True:
         StockTransaction_ID INT IDENTITY(1,1) PRIMARY KEY,
         Product_ID INT,
         Qtty FLOAT,
-        TransactionType_ID INT DEFAULT(2)
+        TransactionType_ID INT
 
         FOREIGN KEY (Product_ID)
         REFERENCES Products(Product_ID),
@@ -56,16 +56,18 @@ if create == True:
     )
     END ''')
 
-    cursor.execute('''CREATE TRIGGER trg_invetory_insert
+    cursor.execute('''CREATE TRIGGER trg_inventory_insert
         ON Products
         AFTER INSERT
     AS 
     BEGIN
-        INSERT INTO Invetory 
-        SELECT TOP 1 Product_ID
+        INSERT INTO Inventory 
+        SELECT TOP 1 Product_ID,0
         FROM Products
-        ORDER BY Product_Id DESC
-    END''')
+        ORDER BY Product_ID DESC
+    END
+                   
+    INSERT INTO TransactionType(TransactionType_Name) VALUES ('IN','OUT','ORDER')''')
     
     cnxn.commit()
     cursor.close()
