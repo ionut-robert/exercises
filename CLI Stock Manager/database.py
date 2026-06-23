@@ -1,75 +1,57 @@
-import pyodbc
-from config import DB_DRIVER,SERVER,DB_DATABASE,DB_USER,DB_PASSWORD
+from config import *
+from sqlalchemy import ForeignKey,String,create_engine
+from sqlalchemy.orm import DeclarativeBase,Mapped,mapped_column
 
-def get_connection():
-    conn = pyodbc.connect(DB_DRIVER, host=SERVER, database=DB_DATABASE, user=DB_USER, password=DB_PASSWORD, TrustServerCertificate='yes')
-    return conn
+engine = create_engine(f"mssql+pyodbc://{DB_USER}:{DB_PASSWORD}@{SERVER}:1433/{DB_DATABASE}?{DB_DRIVER}&TrustServerCertificate=yes",echo=False)
 
-create =  False
-if create == True:
-    cnxn = get_connection()
-    cursor = cnxn.cursor()
 
-    cursor.execute('''
-    IF NOT EXISTS (SELECT * FROM sys.tables)
-    BEGIN
-    CREATE TABLE Products (
-        Product_ID INT IDENTITY(1,1) PRIMARY KEY,
-        Product_Name VARCHAR(50) NOT NULL
-    )
+class Database(DeclarativeBase):
+    pass
 
-    CREATE TABLE Inventory(
-        Product_ID INT,
-        Qtty FLOAT DEFAULT(0)
+class Products(Database):
+    __tablename__ = 'Products'
 
-        FOREIGN KEY (Product_ID)
-        REFERENCES Products(Product_ID)
-    )
-    CREATE TABLE TransactionType(
-        TransactionType_ID INT IDENTITY(1,1) PRIMARY KEY,
-        TransactionType_Name VARCHAR(20)
-    )
+    Product_ID: Mapped[int] = mapped_column(primary_key=True,autoincrement=True)
+    Product_Name: Mapped[str] = mapped_column(String(50),nullable=False)
 
-    CREATE TABLE Orders (
-        Order_ID INT IDENTITY(1,1) PRIMARY KEY,
-        StockTransaction_ID INT,
-        Product_ID INT,
-        Qtty FLOAT,
-        Customer_Name VARCHAR(50),
-        TransactionType_ID INT DEFAULT(3)
+class Inventory(Database):
+    __tablename__ = 'Inventory'
 
-        FOREIGN KEY (Product_ID)
-        REFERENCES Products(Product_ID),
-        FOREIGN KEY (TransactionType_ID)
-        REFERENCES TransactionType(TransactionType_ID)
-    )
+    Inventory_ID: Mapped[int] = mapped_column(primary_key=True,autoincrement=True)
+    Product_ID: Mapped[int] = mapped_column(ForeignKey(Products.Product_ID))
+    Qty : Mapped[float] = mapped_column(default=0,nullable=False)
 
-    CREATE TABLE StockTransactions(
-        StockTransaction_ID INT IDENTITY(1,1) PRIMARY KEY,
-        Product_ID INT,
-        Qtty FLOAT,
-        TransactionType_ID INT
+class TransactionType(Database):
+    __tablename__ = 'TransactionType'
 
-        FOREIGN KEY (Product_ID)
-        REFERENCES Products(Product_ID),
-        FOREIGN KEY (TransactionType_ID)
-        REFERENCES TransactionType(TransactionType_ID)
-    )
-    END ''')
+    TransactionType_ID: Mapped[int] = mapped_column(primary_key=True,autoincrement=True)
+    TransactionType_Name: Mapped[str] = mapped_column(String(15), nullable=False)
 
-    cursor.execute('''CREATE TRIGGER trg_inventory_insert
-        ON Products
-        AFTER INSERT
-    AS 
-    BEGIN
-        INSERT INTO Inventory 
-        SELECT TOP 1 Product_ID,0
-        FROM Products
-        ORDER BY Product_ID DESC
-    END
-                   
-    INSERT INTO TransactionType(TransactionType_Name) VALUES ('IN','OUT','ORDER')''')
+class StockTransactions(Database):
+    __tablename__ = 'StockTransactions'
+
+    StockTransactions_ID: Mapped[int] = mapped_column(primary_key=True,autoincrement=True)
+    Product_ID: Mapped[int] = mapped_column(ForeignKey(Products.Product_ID))
+    Qty: Mapped[float] = mapped_column(nullable=False)
+    TransactionType_ID: Mapped[int] = mapped_column(ForeignKey(TransactionType.TransactionType_ID))
+
+class Customers(Database):
+    __tablename__ = 'Customers'
+
+    Customer_ID: Mapped[int] = mapped_column(primary_key=True)
+    Customer_Name: Mapped[str] = mapped_column(String(50))
+
+class Orders(Database):
+    __tablename__ = 'Orders'
+
+    Order_ID: Mapped[int] = mapped_column(primary_key=True,autoincrement=True)
+    Product_ID: Mapped[int] = mapped_column(ForeignKey(Products.Product_ID))
+    Qty: Mapped[float] = mapped_column(nullable=False)
+    Customer_ID: Mapped[int] = mapped_column(ForeignKey(Customers.Customer_ID))
+    TransactionType_ID: Mapped[int] = mapped_column(ForeignKey(TransactionType.TransactionType_ID))
+
+if __name__ == '__main__':
+
+    Database.metadata.create_all(engine)
     
-    cnxn.commit()
-    cursor.close()
-    cnxn.close()
+__name__=='__main__'
