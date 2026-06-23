@@ -1,4 +1,4 @@
-from functions import Register,add_customer,add_order,add_product,del_product,stock_in,stock_out
+from functions import data,add_customer,add_order,add_product,del_product,stock_in,stock_out,register
 
 if __name__ == '__main__':
     while True:
@@ -26,13 +26,13 @@ if __name__ == '__main__':
 
         elif Choice == 3:
             print(f"{'No.':<12} {'Product Name':<21}")
-            for row in Register.product_register():
+            for row in data.products:
                 print(f'{row.Product_ID:<12} {row.Product_Name:<7}')
 
         elif Choice == 4:
             product_name = input('Product Name:')
             print(f"{'No.':<12} {'Product Name':<21}")
-            for row in Register.product_register():
+            for row in data.products:
                 if row[0] == product_name:
                     print(f'{row.Product_ID:<12} {row.Product_Name:<7}')
 
@@ -54,12 +54,12 @@ if __name__ == '__main__':
 
         elif Choice == 8:
             print(f"{'No.':<10}{'Product Name':<21} {'Quantity':<8}")
-            for row in Register.product_register():
+            for row in data.products:
                 if row.Qty < 10:
                     print(f'{row:<21} {row[1]:<7}')
         
         elif Choice == 9:
-            Register.inventory_register()
+            data.inventory
 
         elif Choice == 10:
             add_customer()
