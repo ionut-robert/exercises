@@ -1,25 +1,27 @@
 from database import engine,Products,Inventory,Customers,StockTransactions,Orders,TransactionType
 from sqlalchemy.orm import Session
 from sqlalchemy import select,update
+from dataclasses import dataclass
 
-class Register:
-    def product_register():
+@dataclass
+class RegisterData:
+    products: list
+    customers: list
+    inventory: list
+
+class Register():
+    def get_data(self):
         with Session(engine) as session:
             products = session.query(Products).all()
-            return products
-    
-    def customer_register():
-        with Session(engine) as session:
             customers = session.query(Customers).all()
-            return customers
-    
-    def inventory_register():
-        with Session(engine) as session:
             inventory = session.query(Inventory).all()
-            return inventory
+            return RegisterData(products=products,customers=customers,inventory=inventory)
+        
+register = Register()
+data = register.get_data()
 
 def add_product(name):
-    if name not in (row.Product_Name for row in Register.products()):
+    if name not in (row.Product_Name for row in data.products):
         new_product = Products(Product_Name = name)
         with Session(engine) as session:
             session.add(new_product)
@@ -27,7 +29,7 @@ def add_product(name):
             inventory_line = Inventory(Product_ID = new_product.Product_ID)
             session.add(inventory_line)
             session.commit()
-        Register.products()
+        register.get_data()
     else:
         raise Exception('The product exists.')
     
@@ -42,18 +44,18 @@ def del_product(name):
                 session.commit()
             else:
                 raise Exception('There are stock movements for this product.')
-        Register.products()
+        register.get_data()
 
 def add_customer(customer_name):
     with Session(engine) as session:
         add_customer = Customers(Customer_Name = customer_name)
         session.add(add_customer)
-    Register.customers()
+    register.get_data()
 
 def add_order(product_name,qty,customer_name):
-    customer_id = (c.Customer_ID for c in Register.customer_register() if c.Customer_Name == customer_name)
-    product_id = (p.Product_ID for p in Register.product_register() if p.Product_Name == product_name)
-    inventory_q = (q.Qty for q in Register.inventory_register() if q.Product_ID == product_id)
+    customer_id = (c.Customer_ID for c in data.customers if c.Customer_Name == customer_name)
+    product_id = (p.Product_ID for p in data.products if p.Product_Name == product_name)
+    inventory_q = (q.Qty for q in data.inventory if q.Product_ID == product_id)
 
     with Session(engine) as session:
         new_order = Orders(Product_ID = product_id, Qty = qty, Customer_ID = customer_id,TransactionType_ID=3)
@@ -63,8 +65,8 @@ def add_order(product_name,qty,customer_name):
         session.commit()
 
 def stock_in(product_name,qty):
-    product_id = (p.Product_ID for p in Register.product_register() if p.Product_Name == product_name)
-    inventory_q = (q.Qty for q in Register.inventory_register() if q.Product_ID == product_id)
+    product_id = (p.Product_ID for p in data.products if p.Product_Name == product_name)
+    inventory_q = (q.Qty for q in data.inventory if q.Product_ID == product_id)
 
     with Session(engine) as session:
         stock_in = StockTransactions(Product_ID = product_id,Qty = qty, TransactionType_ID = 1)
@@ -74,8 +76,8 @@ def stock_in(product_name,qty):
         session.commit()
 
 def stock_out(product_name,qty):
-    product_id = (p.Product_ID for p in Register.product_register() if p.Product_Name == product_name)
-    inventory_q = (q.Qty for q in Register.inventory_register() if q.Product_ID == product_id)
+    product_id = (p.Product_ID for p in data.products if p.Product_Name == product_name)
+    inventory_q = (q.Qty for q in data.inventory if q.Product_ID == product_id)
 
     with Session(engine) as session:
         stock_out = StockTransactions(Product_ID = product_id,Qty = qty, TransactionType_ID = 2)
