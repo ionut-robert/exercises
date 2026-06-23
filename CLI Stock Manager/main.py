@@ -12,7 +12,7 @@ if __name__ == '__main__':
                 '7.Orders',
                 '8.Low Stock Alerts',
                 '9.Inventory',
-                '10.Add Customer'
+                '10.Add Customer',
                 '11.Exit']
 
         for row in menu:
@@ -43,7 +43,7 @@ if __name__ == '__main__':
             product_name = input('Product Name:')
             print(f"{'No.':<12} {'Product Name':<21}")
             for row in data.products:
-                if row[0] == product_name:
+                if row.Product_Name == product_name:
                     print(f'{row.Product_ID:<12} {row.Product_Name:<7}')
 
         elif Choice == 5:
@@ -64,14 +64,17 @@ if __name__ == '__main__':
 
         elif Choice == 8:
             print(f"{'No.':<10}{'Product Name':<21} {'Quantity':<8}")
-            for row in data.products:
-                if row.Qty < 10:
-                    print(f'{row:<21} {row[1]:<7}')
+            for row in data.inventory:
+                for row2 in data.products:
+                    if row.Qty < 10 and row.Product_ID == row2.Product_ID:
+                        print(f'{row.Inventory_ID:<10} {row2.Product_Name:<21} {row.Qty:<8}')
         
         elif Choice == 9:
-            for x in zip(data.inventory,data.products):
-                print(x[0].Inventory_ID,x[0].Product_ID,x[0].Qty,x[1].Product_ID,x[1].Product_Name)
-
+            print(f"{'No.':<10}{'Product Name':<21} {'Quantity':<8}")
+            for row in data.inventory:
+                for row2 in data.products:
+                    if row.Product_ID == row2.Product_ID:
+                        print(f'{row.Inventory_ID:<10} {row2.Product_Name:<21} {row.Qty:<8}')
 
         elif Choice == 10:
             customer_name = input('Name customer: ')
