@@ -2,17 +2,26 @@ from functions import data,add_customer,add_order,add_product,stock_in,stock_out
 
 if __name__ == '__main__':
     while True:
-        menu = ['Menu','1.Add product','2.Delete product','3.All Products','4.Search Product','5.Stock In','6.Stock Out','7.Orders','8.Low Stock Alerts','9.Inventory','10.Exit']
+        menu = ['Menu',
+                '1.Add product',
+                '2.Delete product',
+                '3.Show All Products',
+                '4.Search Product',
+                '5.Stock In',
+                '6.Stock Out',
+                '7.Orders',
+                '8.Low Stock Alerts',
+                '9.Inventory',
+                '10.Add Customer'
+                '11.Exit']
 
         for row in menu:
             print(row)
 
-        Choice = int(input('\nSelect option number(1-10): '))
-
+        Choice = int(input('\nSelect option number(1-11): '))
         
         if Choice == 1:
             product_name = input('Product Name:')
-
             try:
                 add_product(product_name)
             except Exception as e:
@@ -20,7 +29,6 @@ if __name__ == '__main__':
           
         elif Choice == 2:
             product_name = input('Product Name:')
-
             try:
                 del_product(product_name)
             except Exception as e:
@@ -33,7 +41,6 @@ if __name__ == '__main__':
 
         elif Choice == 4:
             product_name = input('Product Name:')
-
             print(f"{'No.':<12} {'Product Name':<21}")
             for row in data.products:
                 if row[0] == product_name:
@@ -42,20 +49,17 @@ if __name__ == '__main__':
         elif Choice == 5:
             product_name = input('Product Name: ')
             qtty = float(input('Quantity: '))
-
             stock_in(product_name,qtty)
 
         elif Choice == 6:
             product_name = input('Product Name: ')
             qtty = float(input('Quantity: '))
-
             stock_out(product_name,qtty)
 
         elif Choice == 7:
             product_name = input('Product Name: ')
             qtty = float(input('Quantity: '))
             customer = input('Customer Name: ')
-
             add_order(product_name,qtty,customer)
 
         elif Choice == 8:
