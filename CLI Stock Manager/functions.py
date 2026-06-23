@@ -1,68 +1,96 @@
-from database import get_connection
+from database import engine,Products,Inventory,Customers,StockTransactions,Orders,TransactionType
+from sqlalchemy.orm import Session
+from sqlalchemy import select,update
 
-def Products():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('''SELECT p.Product_Name, i.Qtty FROM Products p LEFT JOIN Inventory i ON p.Product_ID = i.Product_ID''')
-    products = cursor.fetchall()
-    conn.commit()
+class Register:
+    def product_register():
+        with Session(engine) as session:
+            products = session.query(Products).all()
+            return products
     
-    cursor.close()
-    conn.close()
-    return products
+    def customer_register():
+        with Session(engine) as session:
+            customers = session.query(Customers).all()
+            return customers
+    
+    def inventory_register():
+        with Session(engine) as session:
+            inventory = session.query(Inventory).all()
+            return inventory
 
-def add_product(product_name):
-    conn = get_connection()
-    cursor = conn.cursor()
+def add_product(name):
+    if name not in (row.Product_Name for row in Register.products()):
+        new_product = Products(Product_Name = name)
+        with Session(engine) as session:
+            session.add(new_product)
+            session.flush()
+            inventory_line = Inventory(Product_ID = new_product.Product_ID)
+            session.add(inventory_line)
+            session.commit()
+        Register.products()
+    else:
+        raise Exception('The product exists.')
+    
+def del_product(name):
+        with Session(engine) as session:
+            product = session.scalar(
+                select(Products).join(StockTransactions, Products.Product_ID == StockTransactions.Product_ID).where(
+                    Products.Product_Name == name, StockTransactions is None)
+                )
+            if product is not None :
+                session.delete(product)
+                session.commit()
+            else:
+                raise Exception('There are stock movements for this product.')
+        Register.products()
 
-    cursor.execute('''IF NOT EXISTS (SELECT 1 FROM Products WHERE LOWER(Product_Name) = LOWER(?)) BEGIN INSERT INTO Products(Product_Name) VALUES (?) END''',(product_name),(product_name))
-    conn.commit()
+def add_customer(customer_name):
+    with Session(engine) as session:
+        add_customer = Customers(Customer_Name = customer_name)
+        session.add(add_customer)
+    Register.customers()
 
-    cursor.close()
-    conn.close()
+def add_order(product_name,qty,customer_name):
+    customer_id = (c.Customer_ID for c in Register.customer_register() if c.Customer_Name == customer_name)
+    product_id = (p.Product_ID for p in Register.product_register() if p.Product_Name == product_name)
+    inventory_q = (q.Qty for q in Register.inventory_register() if q.Product_ID == product_id)
 
-def del_product(product_name):
-    conn = get_connection()
-    cursor = conn.cursor()
+    with Session(engine) as session:
+        new_order = Orders(Product_ID = product_id, Qty = qty, Customer_ID = customer_id,TransactionType_ID=3)
+        inv_update = (update(Inventory).where(Inventory.Product_ID==product_id).values(Qty = inventory_q - qty))
+        session.add(new_order)
+        session.execute(inv_update)
+        session.commit()
 
-    cursor.execute('''IF NOT EXISTS (SELECT 1 FROM StockTransactions st, Products p WHERE st.Product_ID = p.Product_ID AND LOWER(p.Product_Name) = LOWER(?)) BEGIN DELETE FROM Inventory WHERE Product_ID = (SELECT Product_ID FROM Products WHERE LOWER(Product_Name) = LOWER(?)) DELETE FROM Products WHERE Product_Name = ? END''', (product_name),(product_name),(product_name))
-    conn.commit()
+def stock_in(product_name,qty):
+    product_id = (p.Product_ID for p in Register.product_register() if p.Product_Name == product_name)
+    inventory_q = (q.Qty for q in Register.inventory_register() if q.Product_ID == product_id)
 
-    cursor.close()
-    conn.close()
+    with Session(engine) as session:
+        stock_in = StockTransactions(Product_ID = product_id,Qty = qty, TransactionType_ID = 1)
+        session.add(stock_in)
+        stmt = (update(Inventory).where(Inventory.Product_ID==product_id).values(Qty = inventory_q + qty))
+        session.execute(stmt)
+        session.commit()
 
-def stock_in(product_name,Qtty):
-    conn = get_connection()
-    cursor = conn.cursor()
+def stock_out(product_name,qty):
+    product_id = (p.Product_ID for p in Register.product_register() if p.Product_Name == product_name)
+    inventory_q = (q.Qty for q in Register.inventory_register() if q.Product_ID == product_id)
 
-    cursor.execute('''INSERT INTO StockTransactions (Product_ID,Qtty,TransactionType_ID) (SELECT Product_ID, ?,(SELECT TransactionType_ID FROM TransactionType WHERE TransactionType_ID = 1) FROM Products WHERE LOWER(Product_Name) = LOWER(?)) UPDATE Inventory SET Qtty = Qtty + ? WHERE Product_ID = (SELECT Product_ID FROM Products WHERE LOWER(Product_Name) = LOWER(?))''',(Qtty),(product_name),(Qtty),(product_name))
-    conn.commit()
+    with Session(engine) as session:
+        stock_out = StockTransactions(Product_ID = product_id,Qty = qty, TransactionType_ID = 2)
+        session.add(stock_out)
+        stmt = (update(Inventory).where(Inventory.Product_ID==product_id).values(Qty = inventory_q - qty))
+        session.execute(stmt)
+        session.commit()
 
-    cursor.close()
-    conn.close()
 
-def stock_out(product_name,Qtty):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('''INSERT INTO StockTransactions (Product_ID,Qtty,TransactionType_ID) SELECT p.Product_ID, ?, (SELECT TransactionType_ID FROM TransactionType WHERE TransactionType_ID = 2) FROM Products p WHERE LOWER(p.Product_Name) = LOWER(?) UPDATE Inventory SET Qtty = Qtty - ? WHERE Product_ID = (SELECT Product_ID FROM Products WHERE LOWER(Product_Name) = LOWER(?))''',(Qtty),(product_name),(Qtty),(product_name))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-
-def orders(product_name,Qtty,Customer):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('''INSERT INTO Orders (Product_ID,TransactionType_ID,Qtty,Customer_Name) SELECT p.Product_ID,(SELECT TransactionType_ID FROM TransactionType WHERE TransactionType_ID = 3),?,? FROM Products p WHERE LOWER(p.Product_Name) = LOWER(?) UPDATE Inventory SET Qtty = Qtty - ? WHERE Product_ID = (SELECT Product_ID FROM Products WHERE LOWER(Product_Name) = LOWER(?))''',(Qtty),(Customer),(product_name),(Qtty),(product_name))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-
-def catalog_products():
-    print(f"{'Product Name':<21} {'Quantity':<8}")
-    for row in Products():
-        print(f'{row[0]:<21} {row[1]:<7}')
+if __name__=='__main__':
+    
+    with Session(engine) as ses:
+        for t in ('IN','OUT','ORDER'):
+            transaction = TransactionType(TransactionType_Name = t)
+            ses.add(transaction)
+        ses.commit()
+        
+__name__ == '__main__'
