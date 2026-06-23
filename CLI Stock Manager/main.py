@@ -1,4 +1,4 @@
-from functions import data,add_customer,add_order,add_product,del_product,stock_in,stock_out,register
+from functions import data,add_customer,add_order,add_product,stock_in,stock_out,del_product
 
 if __name__ == '__main__':
     while True:
@@ -12,17 +12,19 @@ if __name__ == '__main__':
         
         if Choice == 1:
             product_name = input('Product Name:')
+
             try:
                 add_product(product_name)
-            except:
-                print('\nThe product exists.')
+            except Exception as e:
+                print('\n',e)
           
         elif Choice == 2:
             product_name = input('Product Name:')
+
             try:
                 del_product(product_name)
-            except:
-                print('\nThere are stock movements for this product')
+            except Exception as e:
+                print('\n',e)
 
         elif Choice == 3:
             print(f"{'No.':<12} {'Product Name':<21}")
@@ -31,6 +33,7 @@ if __name__ == '__main__':
 
         elif Choice == 4:
             product_name = input('Product Name:')
+
             print(f"{'No.':<12} {'Product Name':<21}")
             for row in data.products:
                 if row[0] == product_name:
@@ -39,17 +42,20 @@ if __name__ == '__main__':
         elif Choice == 5:
             product_name = input('Product Name: ')
             qtty = float(input('Quantity: '))
+
             stock_in(product_name,qtty)
 
         elif Choice == 6:
             product_name = input('Product Name: ')
             qtty = float(input('Quantity: '))
+
             stock_out(product_name,qtty)
 
         elif Choice == 7:
             product_name = input('Product Name: ')
             qtty = float(input('Quantity: '))
             customer = input('Customer Name: ')
+
             add_order(product_name,qtty,customer)
 
         elif Choice == 8:
@@ -59,10 +65,13 @@ if __name__ == '__main__':
                     print(f'{row:<21} {row[1]:<7}')
         
         elif Choice == 9:
-            data.inventory
+            for x in zip(data.inventory,data.products):
+                print(x[0].Inventory_ID,x[0].Product_ID,x[0].Qty,x[1].Product_ID,x[1].Product_Name)
+
 
         elif Choice == 10:
-            add_customer()
+            customer_name = input('Name customer: ')
+            add_customer(customer_name)
 
         elif Choice == 11:
             break
