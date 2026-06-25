@@ -49,7 +49,7 @@ class Orders(Database):
     Customer_ID: Mapped[int] = mapped_column(ForeignKey(Customers.Customer_ID))
     TransactionType_ID: Mapped[int] = mapped_column(ForeignKey(TransactionType.TransactionType_ID))
 
-def create_product(name):
+def add_product(name):
     with Session(engine) as session:
         stmt = Products(Product_Name = name)
         session.add(stmt)
@@ -65,28 +65,28 @@ def delete_product(prod_id):
         inv_stmt = select(Inventory).where(Inventory.Product_ID==prod_id)
         prod_stmt = select(Products).where(Products.Product_ID == prod_id)
 
-        inv = session.scalars(inv_stmt)
-        prod = session.scalars(prod_stmt)
+        inv = session.scalar(inv_stmt)
+        prod = session.scalar(prod_stmt)
 
         session.delete(inv)
         session.delete(prod)
 
         session.commit()
 
-def create_customer(name):
+def add_customer(name):
     with Session(engine) as session:
         cust = Customers(Customer_Name = name)
         session.add(cust)
 
         session.commit()
 
-def create_order(prod_id, cust_id, qty):
+def add_order(prod_id, cust_id, qty):
     with Session(engine) as session:
         stmt = Orders(Customer_ID = cust_id, Product_ID = prod_id, Qty = qty, TransactionType_ID = 3)
         session.add(stmt)
 
         inv_stmt = select(Inventory).where(Inventory.Product_ID == prod_id)
-        inv = session.scalars(inv_stmt)
+        inv = session.scalar(inv_stmt)
         inv.Qty -= qty
 
         session.commit()
@@ -97,7 +97,7 @@ def stock_in(prod_id, qty):
         session.add(st)
 
         inv_stmt = select(Inventory).where(Inventory.Product_ID == prod_id)
-        inv = session.scalars(inv_stmt)
+        inv = session.scalar(inv_stmt)
         inv.Qty += qty
 
         session.commit()
@@ -108,19 +108,23 @@ def stock_out(prod_id, qty):
         session.add(st)
 
         inv_stmt = select(Inventory).where(Inventory.Product_ID == prod_id)
-        inv = session.scalars(inv_stmt)
+        inv = session.scalar(inv_stmt)
         inv.Qty -= qty
 
         session.commit()
 
-def productXstock():
+def get_products_invetory():
     with Session(engine) as session:
-        stmt = select(Products.Product_ID,Products.Product_Name,Inventory.Qty).join(Inventory, Inventory.Product_ID==Products.Product_ID)
-        rows = session.execute(stmt).all()
-        return rows
-    
-if __name__ == '__main__':
+        stmt = select(Products.Product_ID ,Products.Product_Name,Inventory.Qty).where(Inventory.Product_ID==Products.Product_ID)
+        products = session.execute(stmt).all()
+    return products
 
+def get_customers():
+    with Session(engine) as session:
+        stmt = select(Customers.Customer_ID,Customers.Customer_Name)
+        customers = session.execute(stmt).all()
+    return customers
+'''
     Database.metadata.create_all(engine)
     
     with Session(engine) as ses:
@@ -128,5 +132,4 @@ if __name__ == '__main__':
             transaction = TransactionType(TransactionType_Name = t)
             ses.add(transaction)
         ses.commit()
-
-__name__=='__main__'
+'''

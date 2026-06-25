@@ -1,10 +1,10 @@
 import typer
 from services import *
+
 app = typer.Typer()
 
-
 @app.command()
-def create_product(name: str): #python main.py create-product NameProduct (!Name Product)
+def create_product(name: str): #python main.py create-product (ProductName or 'Product Name')
     verify_create_product(name)
 
 @app.command()
@@ -28,30 +28,26 @@ def stock_out(prod_id:int, qty: float):
     verify_stock_out(prod_id, qty)
 
 @app.command()
-def list_products():
-    print(f"{'No':<6}{'Name':<20}")
-    for id,name,qty in products_with_stock():
-        print(f"{id:<6}{name:<20}")
+def product_list():
+    Reports()
 
 @app.command()
-def search_product(prod_name):
-    print(f"{'No':<6}{'Name':<20}{'Qty':<5}")
-    for id,name,qty in products_with_stock():
-        if name == prod_name:
-            print(f"{id:<6}{name:<20}{qty:<5}")
+def search_product(name : str):
+    req_qty = True
+    Reports(prod_name = name, show_qty = req_qty)
 
 @app.command()
 def stock_alerts():
-    print(f"{'No':<6}{'Name':<20}{'Qty':<5}")
-    for id,name,qty in products_with_stock():
-        if qty < 10:
-            print(f"{id:<6}{name:<20}{qty:<5}")
+    req_qty = True
+    min_stock_qty = 10
+    Reports(show_qty = req_qty, min_qty = min_stock_qty)
+    
 
 @app.command()
 def inventory_report():
-    print(f"{'No':<6}{'Name':<20}{'Qty':<5}")
-    for id,name,qty in products_with_stock():
-            print(f"{id:<6}{name:<20}{qty:<5}")
+    req_qty = True
+    Reports(show_qty = req_qty)
+
 
 if __name__ == "__main__":
     app()
