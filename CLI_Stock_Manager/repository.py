@@ -116,14 +116,27 @@ def stock_out(prod_id, qty):
 def get_products_invetory():
     with Session(engine) as session:
         stmt = select(Products.Product_ID ,Products.Product_Name,Inventory.Qty).where(Inventory.Product_ID==Products.Product_ID)
-        products = session.execute(stmt).all()
-    return products
+        products_inv = session.execute(stmt).all()
+    return products_inv
 
 def get_customers():
     with Session(engine) as session:
         stmt = select(Customers.Customer_ID,Customers.Customer_Name)
         customers = session.execute(stmt).all()
     return customers
+
+def get_products():
+    with Session(engine) as session:
+        stmt = select(Products.Product_ID,Products.Product_Name)
+        products = session.execute(stmt).all()
+    return products
+
+def get_stocktransactions():
+    with Session(engine) as session:
+        stmt = select(StockTransactions.Product_ID)
+        stockT_prods = session.execute(stmt).all()
+    return stockT_prods
+ 
 '''
     Database.metadata.create_all(engine)
     

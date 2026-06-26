@@ -1,53 +1,48 @@
 import typer
 from services import *
-
 app = typer.Typer()
 
+
 @app.command()
-def create_product(name: str): #python main.py create-product (ProductName or 'Product Name')
-    verify_create_product(name)
+def add_product(name: str): #python main.py create-product (ProductName or 'Product Name')
+    CheckRules.verify_add_product(name)
 
 @app.command()
 def delete_product(id: int):
-    verify_delete_product(id)
+    CheckRules.verify_delete_product(id)
 
 @app.command()
-def create_customer(name: str):
-    verify_create_customer(name)
+def add_customer(name: str):
+   verify_add_customer(name)
 
 @app.command()
-def create_order(prod_id: int,cust_id: int, qty : float):
-    verify_create_order(prod_id,cust_id,qty)
+def add_order(prod_id: int,cust_id: int, qty : float):
+    CheckRules.verify_add_order(prod_id,cust_id,qty)
 
 @app.command()
 def stock_in(prod_id:int, qty: float):
-    verify_stock_in(prod_id, qty)
+    CheckRules.verify_stock_in(prod_id, qty)
 
 @app.command()
 def stock_out(prod_id:int, qty: float):
-    verify_stock_out(prod_id, qty)
+    CheckRules.verify_stock_out(prod_id, qty)
 
 @app.command()
 def product_list():
-    Reports()
+    Report().all_products()
 
 @app.command()
 def search_product(name : str):
-    req_qty = True
-    Reports(prod_name = name, show_qty = req_qty)
+    Report().find_product(name)
 
 @app.command()
 def stock_alerts():
-    req_qty = True
     min_stock_qty = 10
-    Reports(show_qty = req_qty, min_qty = min_stock_qty)
+    Report().low_stock(min_stock_qty)
     
-
 @app.command()
-def inventory_report():
-    req_qty = True
-    Reports(show_qty = req_qty)
-
+def show_inventory():
+    Report().inventory_report()
 
 if __name__ == "__main__":
     app()
