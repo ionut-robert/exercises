@@ -1,40 +1,16 @@
-from repository import stock_in,stock_out,delete_product,get_customers,get_products_invetory,add_customer,add_order,add_product,get_products,get_stocktransactions
+from db.queries import *
+from db.models import Base
 from regex import fullmatch
 
-class Report():
-    def __init__(self): 
-        self.ids = []
-        self.names = []
-        self.qtys = []
+Base.metadata.create_all(engine)
 
-        for id,name,qty in get_products_invetory():
-            self.ids.append(id)
-            self.names.append(name)
-            self.qtys.append(qty)
-    
-    def all_products(self):
-        print(f"{'No':<6}{'Name':<20}")   
-        for id,name in zip(self.ids,self.names):
-            print(f"{id:<6}{name:<20}") 
-        
-    def find_product(self,product_name):
-        print(f"{'No':<6}{'Name':<20}{'Qty':<5}")    
-        if product_name in self.names:
-            indx = self.names.index(product_name)
-            print(f"{self.ids[indx]:<6}{self.names[indx]:<20}{self.qtys[indx]:<5}")
-        else:
-            raise Exception("Product not found")
-
-    def low_stock(self,min_stock_qty):
-        for id,name,qty in zip(self.ids,self.names,self.qtys):
-            if qty < min_stock_qty:
-                print(f"{id:<6}{name:<20}{qty:<5}")
-            else:
-                pass
-
-    def inventory_report(self):
-        for id,name,qty in zip(self.ids,self.names,self.qtys):
-                print(f"{id:<6}{name:<20}{qty:<5}")
+'''  
+    with Session(engine) as ses:
+        for t in ('IN','OUT','ORDER'):
+            transaction = TransactionType(TransactionType_Name = t)
+            ses.add(transaction)
+        ses.commit()
+'''
 
 class CheckRules:
     def __init__(self):
@@ -60,7 +36,7 @@ class CheckRules:
         if prod_id not in self.product_ids:
             raise Exception("Product id not found")
         elif prod_id in stockT_data():
-            raise Exception("Product have stock movements")
+            raise Exception("Product has stock movements")
         else:
             delete_product(prod_id)
 
@@ -78,7 +54,7 @@ class CheckRules:
         if prod_id not in self.product_ids:
             raise Exception("Product id not found")
         elif qty < 0:
-            raise Exception("Qty cant be negative")
+            raise Exception("Qty cannot be negative")
         else:
             stock_in(prod_id, qty)
 
@@ -86,7 +62,7 @@ class CheckRules:
         if prod_id not in self.product_ids:
             raise Exception("Product id not found")
         elif qty < 0:
-            raise Exception("Qty cant be negative")
+            raise Exception("Qty cannot be negative")
         else:
             stock_out(prod_id, qty)
 

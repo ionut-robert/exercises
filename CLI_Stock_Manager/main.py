@@ -1,7 +1,8 @@
 import typer
-from services import *
-app = typer.Typer()
+from services.services import *
+from services.reports import *
 
+app = typer.Typer()
 
 @app.command()
 def add_product(name: str): #python main.py create-product (ProductName or 'Product Name')
@@ -29,20 +30,20 @@ def stock_out(prod_id:int, qty: float):
 
 @app.command()
 def product_list():
-    Report().all_products()
+    all_products()
 
 @app.command()
 def search_product(name : str):
-    Report().find_product(name)
+    find_product(name)
 
 @app.command()
 def stock_alerts():
     min_stock_qty = 10
-    Report().low_stock(min_stock_qty)
+    low_stock(min_stock_qty)
     
 @app.command()
 def show_inventory():
-    Report().inventory_report()
+    inventory_report()
 
 if __name__ == "__main__":
     app()
