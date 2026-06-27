@@ -1,5 +1,5 @@
-from sqlalchemy import ForeignKey,String
 from sqlalchemy.orm import DeclarativeBase,Mapped,mapped_column
+from sqlalchemy import ForeignKey,String
 
 class Base(DeclarativeBase):
     pass
@@ -45,3 +45,4 @@ class Orders(Base):
     Qty: Mapped[float] = mapped_column(nullable=False)
     Customer_ID: Mapped[int] = mapped_column(ForeignKey(Customers.Customer_ID))
     TransactionType_ID: Mapped[int] = mapped_column(ForeignKey(TransactionType.TransactionType_ID))
+

@@ -1,17 +1,4 @@
-from db.queries import get_products,get_invetory
-
-def invetory_product():
-    ids = []
-    names = []
-    qtys = []
-
-    for prod,inv in zip(get_products(),get_invetory()):
-        if prod[0] == inv[0]:
-            ids.append(prod[0])
-            names.append(prod[1])
-            qtys.append(inv[1])
-
-    return ids,names,qtys
+from db.queries import get_products,get_invetory,invetory_product
 
 def all_products():
     print(f"{'No':<6}{'Name':<20}") 
@@ -44,6 +31,6 @@ def low_stock(min_stock_qty):
 def inventory_report():
     print(f"{'No':<6}{'Name':<20}{'Qty':<5}") 
 
-    for prod,inv  in zip(get_products(),get_invetory()):
+    for prod,inv in zip(get_products(),get_invetory()):
             if prod[0] == inv[0]:
                 print(f"{prod[0]:<6}{prod[1]:<20}{inv[1]:<5}")

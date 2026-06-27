@@ -1,9 +1,18 @@
 from db.config import DB_USER,DB_PASSWORD,SERVER,DB_DATABASE,DB_DRIVER
-from db.models import Products,Inventory,Customers,Orders,StockTransactions
+from sqlalchemy import create_engine,select,text
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine,select
+from db.models import Products,Inventory,Customers,Orders,StockTransactions,Base,TransactionType
 
 engine = create_engine(f"mssql+pyodbc://{DB_USER}:{DB_PASSWORD}@{SERVER}:1433/{DB_DATABASE}?{DB_DRIVER}&TrustServerCertificate=yes",echo=False)
+
+Base.metadata.create_all(engine)
+
+with Session(engine) as ses:
+    if ses.execute(text("SELECT TOP 1 TransactionType_ID FROM TransactionType")) != 1 :
+        for t in ('IN','OUT','ORDER'):
+            transaction = TransactionType(TransactionType_Name = t)
+            ses.add(transaction)
+        ses.commit()
 
 def add_product(name):
     with Session(engine) as session:
@@ -87,10 +96,23 @@ def get_products():
         rows = session.execute(stmt).mappings().all()
     return [(row["Product_ID"],row["Product_Name"]) for row in rows]
 
+print(get_products())
+
 def get_stocktransactions():
     with Session(engine) as session:
         stmt = select(StockTransactions.Product_ID)
         rows = session.execute(stmt).mappings().all()
     return [set(row["Product_ID"]) for row in rows]#?
  
+def invetory_product():
+    ids = []
+    names = []
+    qtys = []
 
+    for prod,inv in zip(get_products(),get_invetory()):
+        if prod[0] == inv[0]:
+            ids.append(prod[0])
+            names.append(prod[1])
+            qtys.append(inv[1])
+
+    return ids,names,qtys
