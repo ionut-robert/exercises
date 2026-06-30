@@ -1,36 +1,32 @@
-from db.queries import get_products,get_invetory,invetory_product
+from db.queries import get_inventory_products
 
 def all_products():
     print(f"{'No':<6}{'Name':<20}") 
 
-    for id,name in get_products():
+    for id,name,_ in get_inventory_products():
         print(f"{id:<6}{name:<20}") 
     
 def find_product(product_name):
-    ids,names,qtys = invetory_product()
-
     print(f"{'No':<6}{'Name':<20}{'Qty':<5}") 
 
-    if product_name not in names:
+    if not any(product_name == name for _,name,_ in get_inventory_products()):
         raise Exception("Product not found")
     elif len(product_name) > 30:
         raise Exception("Max_len = 30")
     else:
-        indx = names.index(product_name)
-        print(f"{ids[indx]:<6}{names[indx]:<20}{qtys[indx]:<5}")
+        target = next((elem for elem in get_inventory_products() if elem[1] == product_name),None)
+        id,name,qty = target
+        print(f"{id:<6}{name:<20}{qty:<5}")
 
 def low_stock(min_stock_qty):
     print(f"{'No':<6}{'Name':<20}{'Qty':<5}") 
 
-    for prod,inv in zip(get_products(),get_invetory()):
-        if inv[1] < min_stock_qty and prod[0] == inv[0]:
-            print(f"{prod[0]:<6}{prod[1]:<20}{inv[1]}")
-        else:
-            pass
+    for id,name,qty in get_inventory_products():
+        if qty < min_stock_qty:
+            print(f"{id:<6}{name:<20}{qty}")
 
 def inventory_report():
     print(f"{'No':<6}{'Name':<20}{'Qty':<5}") 
 
-    for prod,inv in zip(get_products(),get_invetory()):
-            if prod[0] == inv[0]:
-                print(f"{prod[0]:<6}{prod[1]:<20}{inv[1]:<5}")
+    for id,name,qty in get_inventory_products():
+        print(f"{id:<6}{name:<20}{qty:<5}")

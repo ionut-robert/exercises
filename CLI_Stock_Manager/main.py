@@ -1,12 +1,12 @@
 import typer
-from services.services import verify_add_customer,verify_add_order,verify_add_product,verify_delete_product,verify_stock_in,verify_stock_out
+from services.services import verify_add_customer,verify_add_order,verify_create_product,verify_delete_product,verify_stock_in,verify_stock_out
 from services.reports import all_products,find_product,low_stock,inventory_report
 
 app = typer.Typer()
 
 @app.command()
 def add_product(name: str): #python main.py create-product (ProductName or 'Product Name')
-    verify_add_product(name)
+    verify_create_product(name)
 
 @app.command()
 def delete_product(id: int):

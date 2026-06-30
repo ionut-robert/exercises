@@ -1,33 +1,39 @@
-from db.config import DB_USER,DB_PASSWORD,SERVER,DB_DATABASE,DB_DRIVER
-from sqlalchemy import create_engine,select,text
+from db.config import engine
+from sqlalchemy import select,text
 from sqlalchemy.orm import Session
 from db.models import Products,Inventory,Customers,Orders,StockTransactions,Base,TransactionType
+from enum import Enum
 
-engine = create_engine(f"mssql+pyodbc://{DB_USER}:{DB_PASSWORD}@{SERVER}:1433/{DB_DATABASE}?{DB_DRIVER}&TrustServerCertificate=yes",echo=False)
+class StockActions(Enum):
+    IN = 1
+    OUT = 2
+    ORDER = 3
 
 Base.metadata.create_all(engine)
 
 with Session(engine) as ses:
-    if ses.execute(text("SELECT TOP 1 TransactionType_ID FROM TransactionType")) != 1 :
-        for t in ('IN','OUT','ORDER'):
-            transaction = TransactionType(TransactionType_Name = t)
-            ses.add(transaction)
-        ses.commit()
+    if not ses.execute(text("SELECT 1 FROM TransactionType")).first():
+        ses.add_all([
+            TransactionType(TransactionType_Name = 'IN'),
+            TransactionType(TransactionType_Name = 'OUT'),
+            TransactionType(TransactionType_Name = 'ORDER')
+        ])
+    ses.commit()
 
-def add_product(name):
+def initialize_product(name):
     with Session(engine) as session:
-        stmt = Products(Product_Name = name)
-        session.add(stmt)
+        product = Products(Product_Name = name)
+        session.add(product)
         session.flush()
 
-        inv = Inventory(Product_ID = stmt.Product_ID, Qty=0)
+        inv = Inventory(Product_ID = product.Product_ID)
         session.add(inv)
 
         session.commit()
 
-def delete_product(prod_id):
+def remove_product(prod_id):
     with Session(engine) as session:
-        inv_stmt = select(Inventory).where(Inventory.Product_ID==prod_id)
+        inv_stmt = select(Inventory).where(Inventory.Product_ID == prod_id)
         prod_stmt = select(Products).where(Products.Product_ID == prod_id)
 
         inv = session.scalar(inv_stmt)
@@ -38,81 +44,64 @@ def delete_product(prod_id):
 
         session.commit()
 
-def add_customer(name):
+def create_customer(name):
     with Session(engine) as session:
         cust = Customers(Customer_Name = name)
         session.add(cust)
 
         session.commit()
 
-def add_order(prod_id, cust_id, qty):
+def create_order(prod_id, cust_id, qty):
     with Session(engine) as session:
-        stmt = Orders(Customer_ID = cust_id, Product_ID = prod_id, Qty = qty, TransactionType_ID = 3)
+        stmt = Orders(Customer_ID = cust_id, Product_ID = prod_id, Qty = qty, TransactionType_ID = StockActions.ORDER)
         session.add(stmt)
-
-        inv_stmt = select(Inventory).where(Inventory.Product_ID == prod_id)
-        inv = session.scalar(inv_stmt)
-        inv.Qty -= qty
 
         session.commit()
 
+def invetory_update(prod_id,qty):
+    with Session(engine) as session:
+        stmt = select(Inventory).where(Inventory.Product_ID == prod_id)
+
+        inv = session.scalar(stmt)
+        inv.Qty = qty
+        session.commit()
+
+
 def stock_in(prod_id, qty):
     with Session(engine) as session:
-        st = StockTransactions(Product_ID =prod_id, Qty = qty, TransactionType_ID = 1)
+        st = StockTransactions(Product_ID =prod_id, Qty = qty, TransactionType_ID = StockActions.IN)
         session.add(st)
-
-        inv_stmt = select(Inventory).where(Inventory.Product_ID == prod_id)
-        inv = session.scalar(inv_stmt)
-        inv.Qty += qty
 
         session.commit()
 
 def stock_out(prod_id, qty):
     with Session(engine) as session:
-        st = StockTransactions(Product_ID = prod_id, Qty = qty, TransactionType_ID = 2)
+        st = StockTransactions(Product_ID = prod_id, Qty = qty, TransactionType_ID = StockActions.OUT)
         session.add(st)
 
-        inv_stmt = select(Inventory).where(Inventory.Product_ID == prod_id)
-        inv = session.scalar(inv_stmt)
-        inv.Qty -= qty
-
         session.commit()
-
-def get_invetory():
-    with Session(engine) as session:
-        stmt = select(Inventory.Product_ID,Inventory.Qty)
-        rows = session.execute(stmt).mappings().all()
-    return [(row["Product_ID"],row["Qty"]) for row in rows]
 
 def get_customers():
     with Session(engine) as session:
         stmt = select(Customers.Customer_ID,Customers.Customer_Name)
         rows = session.execute(stmt).mappings().all()
-    return [(row["Customer_ID"],row["Customer_Name"]) for row in rows]
-
-def get_products():
-    with Session(engine) as session:
-        stmt = select(Products.Product_ID,Products.Product_Name)
-        rows = session.execute(stmt).mappings().all()
-    return [(row["Product_ID"],row["Product_Name"]) for row in rows]
-
-print(get_products())
+    return rows
 
 def get_stocktransactions():
     with Session(engine) as session:
         stmt = select(StockTransactions.Product_ID)
         rows = session.execute(stmt).mappings().all()
-    return [set(row["Product_ID"]) for row in rows]#?
- 
-def invetory_product():
-    ids = []
-    names = []
-    qtys = []
+    return rows
 
-    for prod,inv in zip(get_products(),get_invetory()):
-        if prod[0] == inv[0]:
-            ids.append(prod[0])
-            names.append(prod[1])
-            qtys.append(inv[1])
+def get_orders():
+    with Session(engine) as session:
+        stmt = select(Orders.Product_ID,Orders.Customer_ID)
+        rows = session.execute(stmt).mappings().all()
+    return rows
 
-    return ids,names,qtys
+def get_inventory_products():
+    with Session(engine) as session:
+        stmt = select(Products.Product_ID,Products.Product_Name,Inventory.Qty).join(Inventory, Inventory.Product_ID == Products.Product_ID)
+
+        rows = session.execute(stmt).fetchall()
+        return rows

@@ -8,4 +8,3 @@ def test_conn():
 
     assert res[0] == 1
 
-test_conn()
