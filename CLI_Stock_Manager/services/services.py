@@ -7,8 +7,6 @@ def validate_stock_opretion(prod_id,qty,cust_id = None, Actions = None):
         raise Exception("Product id not found")
     elif qty < 0:
         raise Exception("Qty cannot be negative")
-    elif any(prod_id == product_id and Qty < qty for product_id,_,Qty in get_inventory_products()):
-        raise Exception("Insufficient quantity")
     else:
         c_qty = next((Qty for product_id,_,Qty in get_inventory_products() if product_id == prod_id),None)
 
@@ -16,6 +14,8 @@ def validate_stock_opretion(prod_id,qty,cust_id = None, Actions = None):
             create_stock_transaction(prod_id, qty,Actions)
             c_qty += qty
             update_inventory_qty(prod_id,c_qty)
+        elif any(prod_id == product_id and Qty < qty for product_id,_,Qty in get_inventory_products()):
+            raise Exception("Insufficient quantity")
         elif Actions == StockActions.OUT:
             create_stock_transaction(prod_id, qty,Actions)
             c_qty -= qty

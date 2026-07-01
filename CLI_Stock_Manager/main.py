@@ -23,11 +23,11 @@ def add_order(prod_id: int,cust_id: int, qty : float):
 
 @app.command()
 def stock_in(prod_id:int, qty: float):
-    validate_stock_opretion(prod_id, qty,StockActions.IN)
+    validate_stock_opretion(prod_id, qty,cust_id= None,Actions= StockActions.IN)
 
 @app.command()
 def stock_out(prod_id:int, qty: float):
-    validate_stock_opretion(prod_id, qty,StockActions.OUT)
+    validate_stock_opretion(prod_id, qty,cust_id= None,Actions= StockActions.OUT)
 
 @app.command()
 def product_list():
