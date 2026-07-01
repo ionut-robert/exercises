@@ -1,5 +1,11 @@
 from sqlalchemy.orm import DeclarativeBase,Mapped,mapped_column
 from sqlalchemy import ForeignKey,String
+from enum import Enum
+
+class StockActions(Enum):
+    IN = 1
+    OUT = 2
+    ORDER = 3
 
 class Base(DeclarativeBase):
     pass

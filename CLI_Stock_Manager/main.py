@@ -1,32 +1,33 @@
 import typer
-from services.services import verify_add_customer,verify_add_order,verify_create_product,verify_delete_product,verify_stock_in,verify_stock_out
+from services.services import validate_create_customer,validate_stock_opretion,validate_create_product,validate_delete_product
 from services.reports import all_products,find_product,low_stock,inventory_report
+from db.models import StockActions
 
 app = typer.Typer()
 
 @app.command()
 def add_product(name: str): #python main.py create-product (ProductName or 'Product Name')
-    verify_create_product(name)
+    validate_create_product(name)
 
 @app.command()
 def delete_product(id: int):
-    verify_delete_product(id)
+    validate_delete_product(id)
 
 @app.command()
 def add_customer(name: str):
-   verify_add_customer(name)
+   validate_create_customer(name)
 
 @app.command()
 def add_order(prod_id: int,cust_id: int, qty : float):
-    verify_add_order(prod_id,cust_id,qty)
+    validate_stock_opretion(prod_id,qty,cust_id,StockActions.ORDER)
 
 @app.command()
 def stock_in(prod_id:int, qty: float):
-    verify_stock_in(prod_id, qty)
+    validate_stock_opretion(prod_id, qty,StockActions.IN)
 
 @app.command()
 def stock_out(prod_id:int, qty: float):
-    verify_stock_out(prod_id, qty)
+    validate_stock_opretion(prod_id, qty,StockActions.OUT)
 
 @app.command()
 def product_list():

@@ -16,7 +16,7 @@ def test_err_max_len_create_product():
 
     assert "max_len" in str(e.value)
 
-def test_err_special_char_add_prod():
+def test_err_special_char_create_prod():
     with raises(Exception):
         verify_create_product("Pr@#!")
 
@@ -27,12 +27,15 @@ def test_add_product():
         assert len(result) == 1
 
 def test_err_duplicate_add_prod():
-    with raises(Exception):
+    with raises(Exception) as e:
         verify_create_product("Product")
+    assert "Duplicate" in str(e.value)
 
 def test_err_id_nf_delete_prod():
+    with Session(engine) as session:
+        product = session.execute(text("SELECT * FROM Products")).mappings().one()
     with raises(Exception):
-        verify_delete_product(2)
+        verify_delete_product(product.Product_ID)
 
 def test_delete_product():
     with Session(engine) as session:
